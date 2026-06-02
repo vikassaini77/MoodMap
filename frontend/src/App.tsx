@@ -18,7 +18,6 @@ import SOS from './components/SOS';
 import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
 import Council from './components/Council';
-import { ToastProvider } from './components/ToastContext';
 
 type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'reset-password' | 'app';
 
@@ -185,20 +184,18 @@ function App() {
   };
 
   return (
-    <ToastProvider>
-      <div className="min-h-screen bg-transparent">
-        {/* Desktop Sidebar */}
-        <Sidebar currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
+    <div className="min-h-screen bg-transparent">
+      {/* Desktop Sidebar */}
+      <Sidebar currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
 
-        {/* Main Content */}
-        <main className="animate-fade-in">
-          {renderPage()}
-        </main>
+      {/* Main Content */}
+      <main className="animate-fade-in">
+        {renderPage()}
+      </main>
 
-        {/* Mobile Bottom Navigation */}
-        <BottomNav currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
-      </div>
-    </ToastProvider>
+      {/* Mobile Bottom Navigation */}
+      <BottomNav currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
+    </div>
   );
 }
 
