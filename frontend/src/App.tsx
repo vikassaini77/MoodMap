@@ -126,7 +126,7 @@ function App() {
   }
 
   if (appState === 'onboarding') {
-    return <Onboarding onComplete={handleOnboardingComplete} />;
+    return <Onboarding onComplete={handleOnboardingComplete} onLogin={() => setAppState('login')} />;
   }
 
   const renderPage = () => {
