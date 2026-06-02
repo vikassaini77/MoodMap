@@ -20,6 +20,31 @@ export const login = async (email, password) => {
   return response.json();
 };
 
+export const forgotPassword = async (email) => {
+  const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!response.ok) {
+    throw new Error('Forgot password failed');
+  }
+  return response.json();
+};
+
+export const resetPassword = async (email, token, newPassword) => {
+  const response = await fetch(`${API_BASE}/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, token, newPassword })
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Password reset failed');
+  }
+  return response.json();
+};
+
 export const register = async (email, password, full_name) => {
   const response = await fetch(`${API_BASE}/auth/register`, {
     method: 'POST',

@@ -3,6 +3,7 @@ import type { Page, UserProfile } from './types';
 import LandingPage from './components/LandingPage';
 import Onboarding from './components/Onboarding';
 import Login from './components/Login';
+import ResetPassword from './components/ResetPassword';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Sidebar, BottomNav } from './components/Navigation';
 import { SplashScreen } from './components/LoadingScreen';
@@ -19,7 +20,7 @@ import Chatbot from './components/Chatbot';
 import Council from './components/Council';
 import { ToastProvider } from './components/ToastContext';
 
-type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'app';
+type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'reset-password' | 'app';
 
 const DEFAULT_PROFILE: UserProfile = {
   id: '',
@@ -55,6 +56,14 @@ function App() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [transitionKey, setTransitionKey] = useState(0);
+
+  // Check for reset password token on mount
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('resetToken') && params.has('email')) {
+      setAppState('reset-password');
+    }
+  }, []);
 
   const updateProfile = useCallback((updates: Partial<UserProfile>) => {
     setProfile(prev => ({ ...prev, ...updates }));
@@ -125,6 +134,25 @@ function App() {
 
   if (appState === 'onboarding') {
     return <Onboarding onComplete={handleOnboardingComplete} onLogin={() => setAppState('login')} />;
+  }
+
+  if (appState === 'reset-password') {
+    const params = new URLSearchParams(window.location.search);
+    return (
+      <ResetPassword 
+        email={params.get('email') || ''} 
+        token={params.get('resetToken') || ''}
+        onSuccess={() => {
+          // Clear URL params without refreshing
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setAppState('login');
+        }}
+        onBack={() => {
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setAppState('landing');
+        }}
+      />
+    );
   }
 
   const renderPage = () => {

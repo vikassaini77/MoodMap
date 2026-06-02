@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import cron from 'node-cron';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 import { db, uuidv4 } from './db.js';
 import { predictMood, analyzeSentiment, burnoutRisk } from './mlClient.js';
 import { generateCompanionResponse, generateWeeklyInsights, generateChatResponse, generateCouncilResponse } from './ai.js';
@@ -98,6 +100,98 @@ app.post('/api/auth/login', async (req, res) => {
     }
   } catch (err) {
     res.status(500).json({ error: 'Login error' });
+  }
+});
+
+// Configure Nodemailer transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER || 'test@gmail.com',
+    pass: process.env.EMAIL_PASS || 'dummy-pass'
+  }
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const userRes = await db.query('SELECT * FROM profiles WHERE email = $1', [email]);
+    const user = userRes.rows[0];
+    if (!user) {
+      // Don't leak that the email doesn't exist for security
+      return res.json({ success: true, message: 'If an account with that email exists, we sent a password reset link.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+    // Token expires in 1 hour
+    const expires = new Date(Date.now() + 3600000);
+
+    await db.query(
+      'UPDATE profiles SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+      [hashedToken, expires, email]
+    );
+
+    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}?resetToken=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    try {
+      await transporter.sendMail({
+        from: `"MoodMap X Support" <${process.env.EMAIL_USER || 'support@moodmap.app'}>`,
+        to: email,
+        subject: 'Password Reset Request',
+        html: `
+          <div style="font-family: sans-serif; max-w: 600px; margin: auto; padding: 20px; text-align: center;">
+            <h2>Password Reset Request</h2>
+            <p>You requested to reset your password for MoodMap X.</p>
+            <p>Click the button below to set a new password:</p>
+            <a href="${resetLink}" style="display: inline-block; padding: 12px 24px; background: #0ea5e9; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0;">Reset Password</a>
+            <p>If you didn't request this, you can safely ignore this email.</p>
+            <p style="color: #666; font-size: 12px;">This link will expire in 1 hour.</p>
+          </div>
+        `
+      });
+      console.log(`[AUTH] Sent password reset email to ${email}`);
+    } catch (emailErr) {
+      console.error('[AUTH] Failed to send email via SMTP, outputting link to console instead for dev:', emailErr.message);
+      console.log(`[AUTH-DEV] Reset link for ${email}: ${resetLink}`);
+    }
+
+    res.json({ success: true, message: 'If an account with that email exists, we sent a password reset link.' });
+  } catch (err) {
+    console.error('[AUTH] Error in forgot-password:', err);
+    res.status(500).json({ error: 'Server error during password reset' });
+  }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+  const { email, token, newPassword } = req.body;
+  try {
+    const userRes = await db.query('SELECT * FROM profiles WHERE email = $1', [email]);
+    const user = userRes.rows[0];
+
+    if (!user || !user.reset_token || !user.reset_token_expires) {
+      return res.status(400).json({ error: 'Invalid or expired password reset token' });
+    }
+
+    if (new Date(user.reset_token_expires) < new Date()) {
+      return res.status(400).json({ error: 'Password reset token has expired' });
+    }
+
+    const isValid = await bcrypt.compare(token, user.reset_token);
+    if (!isValid) {
+      return res.status(400).json({ error: 'Invalid password reset token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await db.query(
+      'UPDATE profiles SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE email = $2',
+      [hashedPassword, email]
+    );
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error('[AUTH] Error in reset-password:', err);
+    res.status(500).json({ error: 'Server error during password reset' });
   }
 });
 

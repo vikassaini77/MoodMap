@@ -18,6 +18,8 @@ const initializeDatabase = async () => {
         password TEXT NOT NULL,
         full_name TEXT,
         streak_count INTEGER DEFAULT 0,
+        reset_token TEXT,
+        reset_token_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -58,6 +60,14 @@ const initializeDatabase = async () => {
       
       DO $$
       BEGIN
+        BEGIN
+          ALTER TABLE profiles ADD COLUMN reset_token TEXT;
+        EXCEPTION WHEN duplicate_column THEN NULL;
+        END;
+        BEGIN
+          ALTER TABLE profiles ADD COLUMN reset_token_expires TIMESTAMP;
+        EXCEPTION WHEN duplicate_column THEN NULL;
+        END;
         BEGIN
           ALTER TABLE chat_messages ADD COLUMN session_id TEXT REFERENCES chat_sessions(id);
         EXCEPTION WHEN duplicate_column THEN NULL;

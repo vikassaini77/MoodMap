@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, Heart, ArrowLeft, Loader2 } from 'lucide-react
 import type { CompanionType } from '../types';
 import { COMPANIONS } from '../types';
 import { useToast } from './ToastContext';
+import { login, forgotPassword } from '../api';
 
 interface LoginProps {
   onLogin: (user: any) => void;
@@ -62,12 +63,21 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onBack }) => {
     }, 1000);
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (!email.trim()) {
       showToast('Please enter your email to reset password', 'error');
       return;
     }
-    showToast('Password reset instructions sent to your email!', 'success');
+    
+    setIsLoading(true);
+    try {
+      await forgotPassword(email);
+      showToast('Password reset instructions sent to your email!', 'success');
+    } catch (err: any) {
+      showToast(err.message || 'Failed to request password reset', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
