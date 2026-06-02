@@ -1,0 +1,25 @@
+services:
+  # Node.js Backend API
+  - type: web
+    name: moodmap-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: ML_SERVER_URL
+        value: "https://moodmap-ml-engine.onrender.com"
+        
+  # Python ML Engine
+  - type: web
+    name: moodmap-ml-engine
+    env: python
+    rootDir: backend_ml
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT

@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - JWT_SECRET=${JWT_SECRET:-super_secret_production_key_change_me}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DATABASE_URL=postgres://moodmap:moodmap_password@db:5432/moodmap
+      - ML_SERVER_URL=http://backend_ml:8000
+    depends_on:
+      - db
+      - backend_ml
+
+  backend_ml:
+    build:
+      context: ./backend_ml
+    ports:
+      - "8000:8000"
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=moodmap
+      - POSTGRES_PASSWORD=moodmap_password
+      - POSTGRES_DB=moodmap
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+
