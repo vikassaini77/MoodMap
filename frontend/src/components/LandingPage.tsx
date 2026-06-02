@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Sparkles, Star, ArrowRight, Play, Shield, Brain, Zap, Users, Award, ChevronDown } from 'lucide-react';
+import { Heart, Sparkles, Star, ArrowRight, Play, Shield, Brain, Zap, Users, Award, ChevronDown, X } from 'lucide-react';
 import AnimatedCompanion from './AnimatedCompanion';
 
 interface LandingPageProps {
@@ -33,6 +33,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
   const [scrollY, setScrollY] = useState(0);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [heroVisible, setHeroVisible] = useState(false);
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setHeroVisible(true), 100);
@@ -165,7 +166,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
               Start Your Journey
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="flex items-center gap-3 px-8 py-4 rounded-full text-lg font-semibold text-gray-700 glass-card transition-all hover:scale-105" onClick={() => alert('Playing MoodMap introduction video...')}>
+            <button className="flex items-center gap-3 px-8 py-4 rounded-full text-lg font-semibold text-gray-700 glass-card transition-all hover:scale-105" onClick={() => setShowVideoModal(true)}>
               <Play className="w-5 h-5 text-sky-500" fill="currentColor" />
               Watch Demo
             </button>
@@ -345,6 +346,34 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
         </div>
         <p className="text-sm text-gray-400">Built with love. Designed for growth.</p>
       </footer>
+      {/* Video Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-3xl overflow-hidden max-w-4xl w-full shadow-2xl animate-scale-in relative">
+            <button 
+              onClick={() => setShowVideoModal(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors text-gray-800"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="aspect-video bg-gray-900 flex flex-col items-center justify-center text-white relative">
+              <Play className="w-16 h-16 text-white/50 mb-4" />
+              <p className="text-lg font-medium text-white/80">MoodMap Introduction Video Placeholder</p>
+              <p className="text-sm text-white/50 mt-2">Connect a real video source here.</p>
+            </div>
+            <div className="p-6 bg-white flex justify-between items-center">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900" style={{ fontFamily: 'Playfair Display, serif' }}>Welcome to MoodMap X</h3>
+                <p className="text-sm text-gray-500">Discover how your emotional ecosystem works.</p>
+              </div>
+              <button onClick={() => { setShowVideoModal(false); onEnter(); }} className="px-6 py-2.5 rounded-full text-sm font-semibold text-white transition-all hover:scale-105" style={{ background: 'linear-gradient(135deg, #0ea5e9, #0284c7)' }}>
+                Begin Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

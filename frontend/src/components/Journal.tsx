@@ -3,6 +3,7 @@ import { Plus, Search, TrendingUp, BookOpen, Calendar, Tag } from 'lucide-react'
 import type { Mood, UserProfile, JournalEntry } from '../types';
 import { MOOD_CONFIG } from '../types';
 import { FloatingWorld } from './FloatingWorld';
+import { useToast } from './ToastContext';
 
 interface JournalProps {
   profile: UserProfile;
@@ -33,6 +34,7 @@ const SAMPLE_ENTRIES: JournalEntry[] = [
 ];
 
 const Journal: React.FC<JournalProps> = ({ profile }) => {
+  const { showToast } = useToast();
   const [entries, setEntries] = useState<JournalEntry[]>(SAMPLE_ENTRIES);
   const [showNew, setShowNew] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -73,9 +75,10 @@ const Journal: React.FC<JournalProps> = ({ profile }) => {
       setNewTitle('');
       setNewContent('');
       setShowNew(false);
+      showToast('Entry saved successfully!', 'success');
     } catch (e) {
       console.error('Failed to save entry', e);
-      alert('Failed to save entry');
+      showToast('Failed to save entry', 'error');
     }
   };
 

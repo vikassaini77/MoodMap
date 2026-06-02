@@ -4,6 +4,7 @@ import type { UserProfile } from '../types';
 import { MOOD_THEMES } from '../moodTheme';
 import { TopBar } from './Navigation';
 import { getAuthHeaders } from '../api';
+import { useToast } from './ToastContext';
 
 interface CouncilProps {
   profile: UserProfile;
@@ -17,6 +18,7 @@ interface AgentResponse {
 }
 
 export const Council: React.FC<CouncilProps> = ({ profile }) => {
+  const { showToast } = useToast();
   const moodTheme = MOOD_THEMES[profile.currentMood];
   const [question, setQuestion] = useState('');
   const [isDebating, setIsDebating] = useState(false);
@@ -44,7 +46,7 @@ export const Council: React.FC<CouncilProps> = ({ profile }) => {
       setCouncilResponse(data);
     } catch (error) {
       console.error(error);
-      alert('The council is currently unavailable. Please try again later.');
+      showToast('The council is currently unavailable. Please try again later.', 'error');
     } finally {
       setIsDebating(false);
     }

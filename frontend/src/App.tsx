@@ -17,6 +17,7 @@ import SOS from './components/SOS';
 import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
 import Council from './components/Council';
+import { ToastProvider } from './components/ToastContext';
 
 type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'app';
 
@@ -92,9 +93,7 @@ function App() {
     setAppState('landing');
   }, []);
 
-  const handleForgotPassword = useCallback(() => {
-    alert('Password reset email would be sent to your inbox');
-  }, []);
+  // Forgot password is now handled inside Login component
 
   const navigateTo = useCallback((page: Page) => {
     setTransitionKey(k => k + 1);
@@ -119,7 +118,6 @@ function App() {
       <Login
         onLogin={handleLogin}
         onCreateAccount={() => setAppState('onboarding')}
-        onForgotPassword={handleForgotPassword}
         onBack={() => setAppState('landing')}
       />
     );
@@ -159,18 +157,20 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent">
-      {/* Desktop Sidebar */}
-      <Sidebar currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
+    <ToastProvider>
+      <div className="min-h-screen bg-transparent">
+        {/* Desktop Sidebar */}
+        <Sidebar currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
 
-      {/* Main Content */}
-      <main className="animate-fade-in">
-        {renderPage()}
-      </main>
+        {/* Main Content */}
+        <main className="animate-fade-in">
+          {renderPage()}
+        </main>
 
-      {/* Mobile Bottom Navigation */}
-      <BottomNav currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
-    </div>
+        {/* Mobile Bottom Navigation */}
+        <BottomNav currentPage={currentPage} onNavigate={navigateTo} profile={profile} onSignOut={handleSignOut} />
+      </div>
+    </ToastProvider>
   );
 }
 

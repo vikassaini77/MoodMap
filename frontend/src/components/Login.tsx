@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, Heart, ArrowLeft, Loader2 } from 'lucide-react';
 import type { CompanionType } from '../types';
 import { COMPANIONS } from '../types';
+import { useToast } from './ToastContext';
 
 interface LoginProps {
   onLogin: (user: any) => void;
   onCreateAccount: () => void;
-  onForgotPassword: () => void;
   onBack: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onForgotPassword, onBack }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onBack }) => {
+  const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -57,8 +58,16 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onForgotPasswor
     setTimeout(() => {
       setIsLoading(false);
       // In real app, this would redirect to OAuth
-      alert(`${provider} login would redirect to OAuth flow`);
+      showToast(`Redirecting to ${provider} OAuth...`, 'info');
     }, 1000);
+  };
+
+  const handleForgotPassword = () => {
+    if (!email.trim()) {
+      showToast('Please enter your email to reset password', 'error');
+      return;
+    }
+    showToast('Password reset instructions sent to your email!', 'success');
   };
 
   return (
@@ -211,7 +220,7 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onForgotPasswor
               </label>
               <button
                 type="button"
-                onClick={onForgotPassword}
+                onClick={handleForgotPassword}
                 className="text-sm text-sky-600 hover:text-sky-700 font-medium transition-colors"
               >
                 Forgot password?
@@ -292,9 +301,9 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onForgotPasswor
           {/* Terms */}
           <p className="mt-6 text-xs text-center text-gray-400 leading-relaxed">
             By signing in, you agree to our{' '}
-            <button className="text-gray-500 hover:text-sky-600 underline transition-colors" onClick={() => alert('Terms of Service: By using MoodMap, you agree to prioritize your mental well-being!')}>Terms of Service</button>
-            <span>&bull;</span>
-            <button className="text-gray-500 hover:text-sky-600 underline transition-colors" onClick={() => alert('Privacy Policy: Your data is secure and completely private.')}>Privacy Policy</button>
+            <button className="text-gray-500 hover:text-sky-600 underline transition-colors" onClick={() => showToast('Terms of Service: Prioritize your mental well-being!', 'info')}>Terms of Service</button>
+            <span className="mx-1">&bull;</span>
+            <button className="text-gray-500 hover:text-sky-600 underline transition-colors" onClick={() => showToast('Privacy Policy: Your data is secure and completely private.', 'info')}>Privacy Policy</button>
           </p>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { MOOD_CONFIG, COMPANIONS } from '../types';
 import { MOOD_THEMES } from '../moodTheme';
 import AnimatedCompanion from './AnimatedCompanion';
 import { MoodWorld } from './MoodWorld';
+import { useToast } from './ToastContext';
 
 interface ProfileProps {
   profile: UserProfile;
@@ -42,6 +43,7 @@ const MOOD_TIMELINE: { date: string; mood: Mood; energy: number; note: string }[
 ];
 
 const Profile: React.FC<ProfileProps> = ({ profile, onUpdateProfile, onNavigate, onSignOut }) => {
+  const { showToast } = useToast();
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile.name);
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'timeline'>('overview');
@@ -275,7 +277,7 @@ const Profile: React.FC<ProfileProps> = ({ profile, onUpdateProfile, onNavigate,
               >
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold" style={{ color: moodTheme.textPrimary }}>Companions</h3>
-                  <button className="text-xs font-semibold" style={{ color: moodTheme.accent }} onClick={() => alert('Keep chatting with your companion and maintaining streaks to unlock more achievements!')}>Unlock More</button>
+                  <button className="text-xs font-semibold" style={{ color: moodTheme.accent }} onClick={() => showToast('Keep chatting with your companion and maintaining streaks to unlock more achievements!', 'info')}>Unlock More</button>
                 </div>
                 <div className="grid grid-cols-4 gap-2">
                   {(Object.entries(COMPANIONS) as [keyof typeof COMPANIONS, typeof COMPANIONS[keyof typeof COMPANIONS]][]).map(([type, c]) => {

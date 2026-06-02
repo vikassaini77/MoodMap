@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Phone, MapPin, MessageCircle, Shield, Heart, AlertTriangle, ExternalLink } from 'lucide-react';
 import type { UserProfile } from '../types';
 import AnimatedCompanion from './AnimatedCompanion';
+import { useToast } from './ToastContext';
 
 interface SOSProps {
   profile: UserProfile;
@@ -22,6 +23,7 @@ const SELF_HELP = [
 ];
 
 const SOS: React.FC<SOSProps> = ({ profile }) => {
+  const { showToast } = useToast();
   const [alertSent, setAlertSent] = useState(false);
   const [locationShared, setLocationShared] = useState(false);
 
@@ -96,7 +98,7 @@ const SOS: React.FC<SOSProps> = ({ profile }) => {
                     <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200">
                       <p className="text-sm text-amber-700 text-center">
                         No emergency contact saved.
-                        <button className="font-bold underline ml-1" onClick={() => alert('Go to your Profile to add an emergency contact.')}>Add one in Profile</button>
+                        <button className="font-bold underline ml-1" onClick={() => showToast('Go to your Profile to add an emergency contact.', 'info')}>Add one in Profile</button>
                       </p>
                     </div>
                   )}

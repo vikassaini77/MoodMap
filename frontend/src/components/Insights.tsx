@@ -3,6 +3,7 @@ import { Brain, TrendingUp, AlertTriangle, Target, Info, Heart, Zap } from 'luci
 import type { Mood, UserProfile } from '../types';
 import { MOOD_CONFIG } from '../types';
 import { FloatingWorld } from './FloatingWorld';
+import { useToast } from './ToastContext';
 
 interface InsightsProps {
   profile: UserProfile;
@@ -47,6 +48,7 @@ const DNA_TRAITS = [
 ];
 
 const Insights: React.FC<InsightsProps> = ({ profile }) => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'dna' | 'predict' | 'habits'>('overview');
 
   const burnoutScore = 38;
@@ -326,7 +328,7 @@ const Insights: React.FC<InsightsProps> = ({ profile }) => {
                         <p className="font-semibold text-gray-800">{r.habit}</p>
                         <p className="text-sm text-gray-500">{r.benefit}</p>
                       </div>
-                      <button className="text-xs font-bold text-sky-600 px-3 py-1.5 bg-sky-100 rounded-lg hover:bg-sky-200 transition-colors" onClick={() => alert('Downloading PDF report...')}>
+                      <button className="text-xs font-bold text-sky-600 px-3 py-1.5 bg-sky-100 rounded-lg hover:bg-sky-200 transition-colors" onClick={() => showToast('Habit added to your tracker!', 'success')}>
                         Add
                       </button>
                     </div>

@@ -5,6 +5,7 @@ import { MOOD_THEMES } from '../moodTheme';
 import { MoodWorld } from './MoodWorld';
 import AnimatedCompanion from './AnimatedCompanion';
 import { sendChatMessage, getChatSessions, createChatSession, getSessionHistory } from '../api';
+import { useToast } from './ToastContext';
 
 interface ChatbotProps {
   profile: UserProfile;
@@ -40,6 +41,7 @@ const SETTINGS_TABS = [
 ];
 
 const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }) => {
+  const { showToast } = useToast();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -173,7 +175,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
     }
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Voice recognition is not supported in this browser.");
+      showToast("Voice recognition is not supported in this browser.", "error");
       return;
     }
     const recognition = new SpeechRecognition();
@@ -201,7 +203,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
   const handleShare = () => {
     const textToShare = messages.map(m => `${m.role === 'user' ? 'You' : companion.name}: ${m.text}`).join('\n\n');
     navigator.clipboard.writeText(`MoodMap Conversation:\n\n${textToShare}`);
-    alert("Chat copied to clipboard!");
+    showToast("Chat copied to clipboard!", "success");
   };
 
   const handleSend = async () => {
@@ -554,9 +556,9 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                             if(mfaCode.length === 6) {
                               handleUpdateSetting('mfaEnabled', true);
                               setShowMfaWizard(false);
-                              alert("MFA enabled successfully!");
+                              showToast("MFA enabled successfully!", "success");
                             } else {
-                              alert("Please enter a valid 6-digit code.");
+                              showToast("Please enter a valid 6-digit code.", "error");
                             }
                           }}
                           className="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
@@ -752,7 +754,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                           className={`px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${googleConnected ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-300 hover:bg-gray-50'}`} 
                           onClick={() => {
                             if (!googleConnected) {
-                              alert('Authenticating with Google...');
+                              showToast('Authenticating with Google...', 'info');
                               setGoogleConnected(true);
                             } else {
                               if(window.confirm('Disconnect Google Drive?')) {
@@ -772,7 +774,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                             <p className="text-xs text-gray-500">Share your listening habits with your companion.</p>
                           </div>
                         </div>
-                        <button className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors" onClick={() => alert('Opening Spotify Auth...')}>Connect</button>
+                        <button className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors" onClick={() => showToast('Opening Spotify Auth...', 'info')}>Connect</button>
                       </div>
                       <button className="text-sm text-gray-500 hover:underline mt-4" onClick={() => setShowAppStore(false)}>← Back</button>
                     </div>
@@ -826,7 +828,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                         <p className="font-medium text-gray-900 text-sm">Shared links</p>
                       </div>
                       <button 
-                        onClick={() => alert("You have 0 shared links.")}
+                        onClick={() => showToast("You have 0 shared links.", 'info')}
                         className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
                       >
                         Manage
@@ -853,7 +855,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                       <button 
                         onClick={() => {
                           if (window.confirm("Are you sure you want to permanently delete your account? This action cannot be undone.")) {
-                            alert("Account scheduled for deletion. You will be logged out.");
+                            showToast("Account scheduled for deletion. You will be logged out.", 'error');
                             if (onSignOut) onSignOut();
                           }
                         }}
@@ -885,7 +887,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                             setChatHistoryMB(0);
                             setSessions([]);
                             setMessages([]);
-                            alert("Chat history cleared.");
+                            showToast("Chat history cleared.", "success");
                           }
                         }}
                         className="text-red-500 text-sm font-medium hover:underline"
@@ -903,7 +905,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                       <button 
                         onClick={() => {
                           setFilesMB(0);
-                          alert("All files cleared.");
+                          showToast("All files cleared.", "success");
                         }}
                         className="text-red-500 text-sm font-medium hover:underline"
                       >Clear</button>
@@ -925,7 +927,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                       <button 
                         onClick={() => {
                           const num = prompt("Enter your mobile number to receive an MFA code:");
-                          if (num) alert(`A verification code was sent to ${num}.`);
+                          if (num) showToast(`A verification code was sent to ${num}.`, "success");
                         }}
                         className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
                       >
@@ -940,7 +942,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                       </div>
                       <button 
                         onClick={() => {
-                          alert("Logging out of all devices...");
+                          showToast("Logging out of all devices...", "info");
                           if (onSignOut) onSignOut();
                         }}
                         className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
@@ -965,7 +967,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                       <button 
                         onClick={() => {
                           const pin = prompt("Create a new 4-digit PIN:");
-                          if (pin) alert("PIN set successfully!");
+                          if (pin) showToast("PIN set successfully!", "success");
                         }}
                         className="px-3 py-1.5 border border-gray-300 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
                       >
@@ -987,7 +989,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                     <button 
                       onClick={() => {
                         prompt("Enter the email address of your trusted contact:");
-                        alert("An invitation has been sent to them!");
+                        showToast("An invitation has been sent to them!", "success");
                       }}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors"
                     >
@@ -1111,7 +1113,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                     handleUpdateSetting('subscription', 'plus');
                     setIsProcessingPayment(false);
                     setShowCheckoutModal(false);
-                    alert("Payment successful! Welcome to MoodMap Plus!");
+                    showToast("Payment successful! Welcome to MoodMap Plus!", "success");
                   }, 2000);
                 }}
                 disabled={isProcessingPayment}
