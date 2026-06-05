@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://img.icons8.com/?size=512&id=103328&format=png" alt="MoodMap X Logo" width="120" />
+  <img src="assets/dashboard_mockup.png" alt="MoodMap X Banner" width="100%" />
 
   <h1>MoodMap X</h1>
   <p><em>The World's First Living Emotional Ecosystem</em></p>
@@ -378,7 +378,7 @@ Distributed under the MIT License. See `LICENSE.md` for more information.
 
 **Vikas Saini**
 * Software Engineer & Architect
-* [LinkedIn](https://www.linkedin.com/in/vikas-saini) (Placeholder)
+* [LinkedIn](https://www.linkedin.com/in/vikas-saini1/)
 * [GitHub - @vikassaini77](https://github.com/vikassaini77)
 * Contact: vikassn44@gmail.com
 
