@@ -44,7 +44,7 @@
 - [15. CI/CD Pipeline](#15-cicd-pipeline)
 - [16. Monitoring & Logging](#16-monitoring--logging)
 - [17. Testing](#17-testing)
-- [18. Screenshots Section](#18-screenshots-section)
+- [18. Platform Showcase](#18-platform-showcase)
 - [19. Deployment](#19-deployment)
 - [20. Roadmap](#20-roadmap)
 - [21. Contributing Guidelines](#21-contributing-guidelines)
@@ -307,7 +307,7 @@ cd backend_ml && pytest tests/
 
 ---
 
-## 18. Screenshots Section
+## 18. Platform Showcase
 
 <div align="center">
   <img src="assets/dashboard_real.png" alt="Dashboard Preview" width="800" />
