@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/dashboard_mockup.png" alt="MoodMap X Banner" width="100%" />
+  <img src="assets/logo.png" alt="MoodMap X Logo" width="600" />
 
   <h1>MoodMap X</h1>
   <p><em>The World's First Living Emotional Ecosystem</em></p>
