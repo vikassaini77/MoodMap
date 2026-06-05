@@ -4,6 +4,7 @@ import { MOOD_CONFIG } from '../types';
 
 interface FloatingWorldProps {
   mood: Mood;
+  equippedBackground?: string;
   children?: React.ReactNode;
 }
 
@@ -43,7 +44,7 @@ const MOOD_GRADIENTS: Record<Mood, string> = {
   neutral: 'from-sky-100 via-blue-50 to-cyan-50',
 };
 
-export const FloatingWorld: React.FC<FloatingWorldProps> = ({ mood, children }) => {
+export const FloatingWorld: React.FC<FloatingWorldProps> = ({ mood, equippedBackground, children }) => {
   const [particles, setParticles] = useState<Particle[]>([]);
   const [clouds, setClouds] = useState<Cloud[]>([]);
 
@@ -71,9 +72,16 @@ export const FloatingWorld: React.FC<FloatingWorldProps> = ({ mood, children }) 
   }, [mood]);
 
   const config = MOOD_CONFIG[mood];
+  
+  const isStarry = equippedBackground === 'starry-bg' || equippedBackground === 'starry-bundle';
+  const isSakura = equippedBackground === 'sakura-bg';
+  
+  let bgClasses = `bg-gradient-to-b ${MOOD_GRADIENTS[mood]}`;
+  if (isStarry) bgClasses = 'bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900';
+  if (isSakura) bgClasses = 'bg-gradient-to-b from-pink-100 via-rose-50 to-pink-50';
 
   return (
-    <div className={`relative min-h-screen bg-gradient-to-b ${MOOD_GRADIENTS[mood]} overflow-hidden transition-all duration-2000`}>
+    <div className={`relative min-h-screen ${bgClasses} overflow-hidden transition-all duration-2000`}>
       {/* Animated clouds */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {clouds.map(cloud => (
@@ -94,6 +102,9 @@ export const FloatingWorld: React.FC<FloatingWorldProps> = ({ mood, children }) 
           </div>
         ))}
       </div>
+      
+      {/* Starry Night Effect */}
+      {isStarry && <StarryEffect />}
 
       {/* Rain for sad mood */}
       {mood === 'sad' && <RainEffect />}
@@ -195,6 +206,32 @@ const SparkleEffect: React.FC = () => (
         ✦
       </div>
     ))}
+  </div>
+);
+
+const StarryEffect: React.FC = () => (
+  <div className="absolute inset-0 pointer-events-none">
+    {Array.from({ length: 50 }, (_, i) => (
+      <div
+        key={`star-${i}`}
+        className="absolute bg-white rounded-full"
+        style={{
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          width: `${1 + Math.random() * 2}px`,
+          height: `${1 + Math.random() * 2}px`,
+          opacity: 0.2 + Math.random() * 0.8,
+          animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite alternate`,
+          animationDelay: `${Math.random() * 2}s`,
+        }}
+      />
+    ))}
+    <style>{`
+      @keyframes twinkle {
+        0% { opacity: 0.2; transform: scale(0.8); }
+        100% { opacity: 1; transform: scale(1.2); }
+      }
+    `}</style>
   </div>
 );
 

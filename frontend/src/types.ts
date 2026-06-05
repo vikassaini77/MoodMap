@@ -20,8 +20,13 @@ export interface UserProfile {
   achievements: Achievement[];
   emergencyContacts: EmergencyContact[];
   avatarUrl?: string;
+  coverUrl?: string;
   customInstructions?: string;
   settings?: UserSettings;
+  dailyMissions?: DailyMission[];
+  ownedItems?: string[];
+  equippedBackground?: string;
+  journalEntries?: JournalEntry[];
 }
 
 export interface UserSettings {
@@ -64,6 +69,14 @@ export interface JournalEntry {
   mood: Mood;
   sentiment: number;
   tags: string[];
+}
+
+export interface DailyMission {
+  id: string;
+  title: string;
+  xp: number;
+  done: boolean;
+  emoji: string;
 }
 
 export interface ShopItem {

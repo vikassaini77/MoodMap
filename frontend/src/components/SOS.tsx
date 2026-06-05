@@ -6,6 +6,7 @@ import { useToast } from './ToastContext';
 
 interface SOSProps {
   profile: UserProfile;
+  onNavigate?: (page: any) => void;
 }
 
 const CRISIS_RESOURCES = [
@@ -25,7 +26,42 @@ const SELF_HELP = [
 const SOS: React.FC<SOSProps> = ({ profile }) => {
   const { showToast } = useToast();
   const [alertSent, setAlertSent] = useState(false);
+  const [isAlerting, setIsAlerting] = useState(false);
   const [locationShared, setLocationShared] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationDetails, setLocationDetails] = useState('');
+
+  const handleShareLocation = () => {
+    setIsLocating(true);
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocationDetails(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          setLocationShared(true);
+          setIsLocating(false);
+          showToast('Location fetched successfully', 'success');
+        },
+        (error) => {
+          console.error(error);
+          setIsLocating(false);
+          showToast('Failed to get location. Please enable location services.', 'error');
+        }
+      );
+    } else {
+      setIsLocating(false);
+      showToast('Geolocation is not supported by your browser', 'error');
+    }
+  };
+
+  const handleAlertContact = () => {
+    setIsAlerting(true);
+    setTimeout(() => {
+      setAlertSent(true);
+      setIsAlerting(false);
+      showToast('Emergency contact has been alerted', 'success');
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #fce4ec 0%, #e8f5e9 50%, #e3f2fd 100%)' }}>
@@ -72,25 +108,28 @@ const SOS: React.FC<SOSProps> = ({ profile }) => {
 
                   {/* Alert Contact */}
                   {profile.emergencyContacts.length > 0 ? (
-                    <button onClick={() => setAlertSent(true)}
+                    <button onClick={handleAlertContact}
+                      disabled={isAlerting || alertSent}
                       className={`w-full flex items-center gap-5 p-5 rounded-2xl transition-all ${
                         alertSent ? 'bg-green-100 border-2 border-green-400' : 'bg-white/80 hover:bg-white'
-                      }`}>
+                      } ${isAlerting ? 'opacity-70' : ''}`}>
                       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${alertSent ? 'bg-green-200' : 'bg-red-100'}`}>
                         {alertSent ? (
                           <svg className="w-7 h-7 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
+                        ) : isAlerting ? (
+                          <div className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
                         ) : (
                           <MessageCircle className="w-7 h-7 text-red-500" />
                         )}
                       </div>
                       <div className="flex-1 text-left">
                         <p className={`font-bold text-lg ${alertSent ? 'text-green-700' : 'text-gray-800'}`}>
-                          {alertSent ? 'Alert Sent!' : `Alert ${profile.emergencyContacts[0].name}`}
+                          {alertSent ? 'Alert Sent!' : isAlerting ? 'Sending Alert...' : `Alert ${profile.emergencyContacts[0].name}`}
                         </p>
                         <p className={`text-sm ${alertSent ? 'text-green-600' : 'text-gray-500'}`}>
-                          {alertSent ? 'They know you need support.' : profile.emergencyContacts[0].phone}
+                          {alertSent ? 'They know you need support.' : isAlerting ? 'Connecting to network...' : profile.emergencyContacts[0].phone}
                         </p>
                       </div>
                     </button>
@@ -98,23 +137,28 @@ const SOS: React.FC<SOSProps> = ({ profile }) => {
                     <div className="p-5 rounded-2xl bg-amber-50 border border-amber-200">
                       <p className="text-sm text-amber-700 text-center">
                         No emergency contact saved.
-                        <button className="font-bold underline ml-1" onClick={() => showToast('Go to your Profile to add an emergency contact.', 'info')}>Add one in Profile</button>
+                        <button className="font-bold underline ml-1" onClick={() => onNavigate?.('settings')}>Add one in Settings</button>
                       </p>
                     </div>
                   )}
 
                   {/* Share Location */}
-                  <button onClick={() => setLocationShared(true)}
+                  <button onClick={handleShareLocation}
+                    disabled={isLocating || locationShared}
                     className={`w-full flex items-center gap-5 p-5 rounded-2xl transition-all ${
                       locationShared ? 'bg-blue-100 border-2 border-blue-400' : 'bg-white/80 hover:bg-white'
-                    }`}>
+                    } ${isLocating ? 'opacity-70' : ''}`}>
                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${locationShared ? 'bg-blue-200' : 'bg-sky-100'}`}>
-                      <MapPin className={`w-7 h-7 ${locationShared ? 'text-blue-600' : 'text-sky-500'}`} />
+                      {isLocating ? (
+                        <div className="w-6 h-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <MapPin className={`w-7 h-7 ${locationShared ? 'text-blue-600' : 'text-sky-500'}`} />
+                      )}
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="font-bold text-lg text-gray-800">{locationShared ? 'Location Shared' : 'Share My Location'}</p>
+                      <p className="font-bold text-lg text-gray-800">{locationShared ? 'Location Shared' : isLocating ? 'Locating...' : 'Share My Location'}</p>
                       <p className="text-sm text-gray-500">
-                        {locationShared ? 'Your contacts can see you.' : 'Send to emergency contacts'}
+                        {locationShared ? `Active: ${locationDetails}` : isLocating ? 'Acquiring GPS signal...' : 'Send to emergency contacts'}
                       </p>
                     </div>
                   </button>

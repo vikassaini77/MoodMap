@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { User, Palette, Bell, Shield, AlertTriangle, FileText, ChevronRight, Camera, Moon, Sun, Check, Volume2, Globe } from 'lucide-react';
-import type { UserProfile, Mood } from '../types';
+import type { UserProfile, Mood, EmergencyContact } from '../types';
 import { COMPANIONS } from '../types';
 import { MOOD_THEMES } from '../moodTheme';
 import { PageLoading } from './LoadingScreen';
+import { useToast } from './ToastContext';
 import AnimatedCompanion from './AnimatedCompanion';
 import { MoodWorld } from './MoodWorld';
 
@@ -19,6 +20,10 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
   const [activeSection, setActiveSection] = useState<SettingsSection>('personal');
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const { showToast } = useToast();
+
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [newContact, setNewContact] = useState<EmergencyContact>({ name: '', phone: '', relation: '' });
 
   const [formData, setFormData] = useState({
     name: profile.name,
@@ -61,6 +66,11 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
         companion: formData.selectedCompanion,
         currentMood: formData.defaultMood,
         avatarUrl: formData.avatarUrl,
+        settings: {
+          ...profile.settings,
+          theme: formData.theme === 'dark' ? 'Dark' : 'Light',
+          contrast: 'System'
+        }
       });
       setLoading(false);
       setSaved(true);
@@ -68,7 +78,7 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
     }, 800);
   };
 
-  const theme = MOOD_THEMES[profile.currentMood];
+  const theme = MOOD_THEMES[formData.defaultMood];
 
   const sections: { id: SettingsSection; icon: React.FC<{ className?: string }>; label: string }[] = [
     { id: 'personal', icon: User, label: 'Personal' },
@@ -80,7 +90,7 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
   ];
 
   return (
-    <MoodWorld mood={profile.currentMood}>
+    <MoodWorld mood={formData.defaultMood}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         {loading && <PageLoading message="Saving your settings..." />}
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -403,7 +413,9 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                           placeholder="New password"
                           className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white mb-3"
                         />
-                        <button className="px-6 py-2 rounded-xl text-white font-medium"
+                        <button 
+                          onClick={() => showToast('Password update disabled in demo mode.', 'info')}
+                          className="px-6 py-2 rounded-xl text-white font-medium"
                           style={{ background: 'linear-gradient(135deg, #0ea5e9, #0369a1)' }}>
                           Update Password
                         </button>
@@ -418,7 +430,12 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                               <p className="text-sm text-gray-500">Add extra security to your account</p>
                             </div>
                           </div>
-                          <button className="text-sm font-medium text-sky-600 hover:underline">Enable</button>
+                          <button 
+                            onClick={() => showToast('Two-Factor Authentication is currently in beta.', 'info')}
+                            className="text-sm font-medium text-sky-600 hover:underline"
+                          >
+                            Enable
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -441,7 +458,12 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                               <p className="font-medium text-gray-700">{contact.name}</p>
                               <p className="text-sm text-gray-500">{contact.relation} • {contact.phone}</p>
                             </div>
-                            <button className="text-red-500 hover:text-red-600 text-sm font-medium">Remove</button>
+                            <button 
+                              onClick={() => onUpdateProfile({ emergencyContacts: profile.emergencyContacts.filter((_, idx) => idx !== i) })}
+                              className="text-red-500 hover:text-red-600 text-sm font-medium"
+                            >
+                              Remove
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -451,12 +473,64 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                       </div>
                     )}
 
-                    <button
-                      onClick={() => onNavigate('profile')}
-                      className="w-full py-4 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 font-medium hover:border-sky-400 hover:text-sky-600 transition-colors"
-                    >
-                      + Add Emergency Contact
-                    </button>
+                    {isAddingContact ? (
+                      <div className="p-4 rounded-xl bg-white/60 space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          value={newContact.name}
+                          onChange={(e) => setNewContact(c => ({ ...c, name: e.target.value }))}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                        />
+                        <input
+                          type="tel"
+                          placeholder="Phone Number"
+                          value={newContact.phone}
+                          onChange={(e) => setNewContact(c => ({ ...c, phone: e.target.value }))}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Relation (e.g. Parent, Friend)"
+                          value={newContact.relation}
+                          onChange={(e) => setNewContact(c => ({ ...c, relation: e.target.value }))}
+                          className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-sky-400 bg-white"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => {
+                              if (newContact.name && newContact.phone) {
+                                onUpdateProfile({ emergencyContacts: [...profile.emergencyContacts, newContact] });
+                                setNewContact({ name: '', phone: '', relation: '' });
+                                setIsAddingContact(false);
+                                showToast('Emergency contact added successfully', 'success');
+                              } else {
+                                showToast('Please provide at least a name and phone number', 'error');
+                              }
+                            }}
+                            className="flex-1 py-2 rounded-xl text-white font-medium bg-sky-500 hover:bg-sky-600 transition-colors"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsAddingContact(false);
+                              setNewContact({ name: '', phone: '', relation: '' });
+                            }}
+                            className="flex-1 py-2 rounded-xl border border-gray-300 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setIsAddingContact(true)}
+                        className="w-full py-4 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 font-medium hover:border-sky-400 hover:text-sky-600 transition-colors"
+                      >
+                        + Add Emergency Contact
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -469,7 +543,10 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                     </h2>
 
                     <div className="space-y-4">
-                      <button className="w-full flex items-center justify-between p-4 rounded-xl bg-white/60 hover:bg-white/80 transition-colors text-left">
+                      <button 
+                        onClick={() => showToast('Data export will be sent to your email shortly.', 'success')}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-white/60 hover:bg-white/80 transition-colors text-left"
+                      >
                         <div className="flex items-center gap-3">
                           <span className="text-xl">📤</span>
                           <div>
@@ -480,7 +557,10 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                         <ChevronRight className="w-5 h-5 text-gray-400" />
                       </button>
 
-                      <button className="w-full flex items-center justify-between p-4 rounded-xl bg-white/60 hover:bg-white/80 transition-colors text-left">
+                      <button 
+                        onClick={() => showToast('Privacy settings updated.', 'success')}
+                        className="w-full flex items-center justify-between p-4 rounded-xl bg-white/60 hover:bg-white/80 transition-colors text-left"
+                      >
                         <div className="flex items-center gap-3">
                           <span className="text-xl">🔒</span>
                           <div>
@@ -500,7 +580,10 @@ const Settings: React.FC<SettingsProps> = ({ profile, onUpdateProfile, onNavigat
                               <p className="text-sm text-red-600">Permanently delete your account and all data</p>
                             </div>
                           </div>
-                          <button className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors">
+                          <button 
+                            onClick={() => showToast('Account deletion is disabled in demo mode.', 'warning')}
+                            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium transition-colors"
+                          >
                             Delete
                           </button>
                         </div>

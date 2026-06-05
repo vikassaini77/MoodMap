@@ -54,7 +54,7 @@ const HABITATS: Record<string, {
   },
 };
 
-const Sanctuary: React.FC<SanctuaryProps> = ({ profile }) => {
+const Sanctuary: React.FC<SanctuaryProps> = ({ profile, onNavigate }) => {
   const companion = COMPANIONS[profile.companion];
   const habitat = HABITATS[profile.companion];
   const moodConfig = MOOD_CONFIG[profile.currentMood];
@@ -70,7 +70,7 @@ const Sanctuary: React.FC<SanctuaryProps> = ({ profile }) => {
   };
 
   return (
-    <FloatingWorld mood={profile.currentMood}>
+    <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
@@ -239,11 +239,19 @@ const Sanctuary: React.FC<SanctuaryProps> = ({ profile }) => {
                       {el}
                     </div>
                   ))}
-                  <div className="aspect-square rounded-xl flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer border-2 border-dashed border-gray-300">
+                  <div 
+                    onClick={() => onNavigate?.('shop')}
+                    className="aspect-square rounded-xl flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer border-2 border-dashed border-gray-300"
+                  >
                     <span className="text-xl text-gray-400">+</span>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-3 text-center">Unlock more in the Shop</p>
+                <button 
+                  onClick={() => onNavigate?.('shop')}
+                  className="w-full text-xs text-sky-600 hover:text-sky-700 font-medium mt-3 text-center"
+                >
+                  Unlock more in the Shop →
+                </button>
               </div>
             </div>
           </div>

@@ -25,7 +25,7 @@ const CATEGORIES = ['All', 'Skins', 'Backgrounds', 'Accessories', 'Themes', 'Com
 
 const Shop: React.FC<ShopProps> = ({ profile, onUpdateProfile }) => {
   const [category, setCategory] = useState('All');
-  const [owned, setOwned] = useState<string[]>(['sakura-bg']);
+  const owned = profile.ownedItems || ['sakura-bg'];
   const [purchaseAnim, setPurchaseAnim] = useState<string | null>(null);
   const [confirmItem, setConfirmItem] = useState<typeof SHOP_ITEMS[0] | null>(null);
 
@@ -41,15 +41,18 @@ const Shop: React.FC<ShopProps> = ({ profile, onUpdateProfile }) => {
 
   const buy = (item: typeof SHOP_ITEMS[0]) => {
     if (profile.moodCoins < item.price) return;
-    setOwned(o => [...o, item.id]);
-    onUpdateProfile({ moodCoins: profile.moodCoins - item.price });
+    const newOwned = [...owned, item.id];
+    onUpdateProfile({ 
+      moodCoins: profile.moodCoins - item.price,
+      ownedItems: newOwned
+    });
     setPurchaseAnim(item.id);
     setConfirmItem(null);
     setTimeout(() => setPurchaseAnim(null), 2000);
   };
 
   return (
-    <FloatingWorld mood={profile.currentMood}>
+    <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
@@ -137,9 +140,24 @@ const Shop: React.FC<ShopProps> = ({ profile, onUpdateProfile }) => {
                     <p className="font-bold text-gray-800 text-sm mb-0.5 truncate">{item.name}</p>
                     <p className="text-xs text-gray-500 mb-3 capitalize">{item.type}</p>
                     {isOwned ? (
-                      <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-100 text-green-600">
-                        <Check className="w-4 h-4" />
-                        <span className="text-xs font-bold">Owned</span>
+                      <div className="flex flex-col gap-2 w-full">
+                        <div className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-green-100 text-green-600">
+                          <Check className="w-4 h-4" />
+                          <span className="text-xs font-bold">Owned</span>
+                        </div>
+                        {(item.type === 'background' || item.type === 'theme') && profile.equippedBackground !== item.id && (
+                          <button
+                            onClick={() => onUpdateProfile({ equippedBackground: item.id })}
+                            className="w-full py-1.5 rounded-lg text-xs font-bold bg-sky-100 text-sky-700 hover:bg-sky-200 transition-colors"
+                          >
+                            Equip
+                          </button>
+                        )}
+                        {(item.type === 'background' || item.type === 'theme') && profile.equippedBackground === item.id && (
+                          <div className="w-full py-1.5 text-center rounded-lg text-xs font-bold bg-gray-100 text-gray-500">
+                            Equipped
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <button

@@ -9,9 +9,10 @@ interface LoginProps {
   onLogin: (user: any) => void;
   onCreateAccount: () => void;
   onBack: () => void;
+  onForgotPassword: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onBack }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onBack, onForgotPassword }) => {
   const { showToast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -63,21 +64,8 @@ const Login: React.FC<LoginProps> = ({ onLogin, onCreateAccount, onBack }) => {
     }, 1000);
   };
 
-  const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      showToast('Please enter your email to reset password', 'error');
-      return;
-    }
-    
-    setIsLoading(true);
-    try {
-      await forgotPassword(email);
-      showToast('Password reset instructions sent to your email!', 'success');
-    } catch (err: any) {
-      showToast(err.message || 'Failed to request password reset', 'error');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleForgotPassword = () => {
+    onForgotPassword();
   };
 
   return (

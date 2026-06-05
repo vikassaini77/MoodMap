@@ -19,7 +19,7 @@ const MOOD_DATA: { day: string; mood: Mood; score: number }[] = [
   { day: 'Sun', mood: 'calm', score: 76 },
 ];
 
-const AI_INSIGHTS = [
+const DEFAULT_AI_INSIGHTS = [
   {
     title: 'Peak Energy Time', insight: "You're most positive between 9-11 AM. Schedule important tasks then.",
     icon: '⚡', color: '#fbbf24', confidence: 87,
@@ -38,6 +38,78 @@ const AI_INSIGHTS = [
   },
 ];
 
+const getDynamicInsights = (goals: string[]) => {
+  const insights = [];
+  
+  if (goals.includes('stress')) {
+    insights.push({
+      title: 'Stress Management', insight: 'Taking short breaks every 90 minutes reduces your stress signals by 35%.',
+      icon: '😮‍💨', color: '#22c55e', confidence: 88,
+    });
+  }
+  if (goals.includes('sleep')) {
+    insights.push({
+      title: 'Sleep Optimization', insight: 'Going to bed before 11 PM correlates with a 40% higher mood score the next day.',
+      icon: '😴', color: '#60a5fa', confidence: 92,
+    });
+  }
+  if (goals.includes('focus') || goals.includes('productivity')) {
+    insights.push({
+      title: 'Peak Focus Time', insight: 'You are most productive between 10 AM and 12 PM. Tackle hard tasks then!',
+      icon: '🎯', color: '#fbbf24', confidence: 85,
+    });
+  }
+  if (goals.includes('anxiety')) {
+    insights.push({
+      title: 'Anxiety Pattern', insight: 'Your anxiety is lowest after engaging in mindful breathing exercises.',
+      icon: '💆', color: '#a855f7', confidence: 78,
+    });
+  }
+  
+  // Fill the rest with defaults if not enough goals
+  for (const def of DEFAULT_AI_INSIGHTS) {
+    if (insights.length >= 4) break;
+    if (!insights.find(i => i.title === def.title)) {
+      insights.push(def);
+    }
+  }
+  
+  return insights.slice(0, 4);
+};
+
+const getRecommendedHabits = (goals: string[]) => {
+  const habits = [];
+  
+  if (goals.includes('stress') || goals.includes('anxiety')) {
+    habits.push({ habit: '5-min box breathing', benefit: 'Quickly lowers heart rate and stress', emoji: '🌬️' });
+  }
+  if (goals.includes('sleep')) {
+    habits.push({ habit: 'Digital sunset at 9pm', benefit: 'Improves sleep quality and deep sleep', emoji: '🌙' });
+  }
+  if (goals.includes('happiness') || goals.includes('motivation')) {
+    habits.push({ habit: 'Gratitude journaling', benefit: 'Boosts baseline happiness score', emoji: '📝' });
+  }
+  if (goals.includes('productivity') || goals.includes('focus')) {
+    habits.push({ habit: 'Pomodoro Technique', benefit: 'Enhances focus and prevents burnout', emoji: '⏱️' });
+  }
+  
+  // Defaults
+  const defaultHabits = [
+    { habit: 'Morning stretching', benefit: 'Wakes up the body', emoji: '🧘' },
+    { habit: 'Drink 8 glasses of water', benefit: 'Keeps energy levels stable', emoji: '💧' },
+    { habit: 'Take a 15-min walk', benefit: 'Clears the mind', emoji: '🚶' },
+  ];
+  
+  for (const def of defaultHabits) {
+    if (habits.length >= 3) break;
+    if (!habits.find(h => h.habit === def.habit)) {
+      habits.push(def);
+    }
+  }
+  
+  return habits.slice(0, 3);
+};
+
 const DNA_TRAITS = [
   { label: 'Empathy', value: 78, color: '#f43f5e' },
   { label: 'Resilience', value: 65, color: '#0ea5e9' },
@@ -47,16 +119,19 @@ const DNA_TRAITS = [
   { label: 'Inner Calm', value: 59, color: '#a855f7' },
 ];
 
-const Insights: React.FC<InsightsProps> = ({ profile }) => {
+const Insights: React.FC<InsightsProps> = ({ profile, onUpdateProfile }) => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<'overview' | 'dna' | 'predict' | 'habits'>('overview');
 
   const burnoutScore = 38;
   const burnoutColor = burnoutScore > 70 ? '#ef4444' : burnoutScore > 40 ? '#f97316' : '#22c55e';
   const burnoutLabel = burnoutScore > 70 ? 'High Risk' : burnoutScore > 40 ? 'Moderate' : 'Low Risk';
+  
+  const dynamicInsights = getDynamicInsights(profile.goals || []);
+  const dynamicHabits = getRecommendedHabits(profile.goals || []);
 
   return (
-    <FloatingWorld mood={profile.currentMood}>
+    <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
@@ -149,7 +224,7 @@ const Insights: React.FC<InsightsProps> = ({ profile }) => {
                   <h3 className="font-bold text-gray-800 text-lg">AI Observations</h3>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {AI_INSIGHTS.map(ins => (
+                  {dynamicInsights.map(ins => (
                     <div key={ins.title} className="bento-card glass-card rounded-2xl p-5">
                       <div className="flex items-start gap-4">
                         <div className="text-3xl">{ins.icon}</div>
@@ -317,18 +392,23 @@ const Insights: React.FC<InsightsProps> = ({ profile }) => {
               <div className="col-span-12 lg:col-span-6 bento-card glass-card rounded-3xl p-6">
                 <h3 className="font-bold text-gray-800 text-lg mb-6">Recommended Habits</h3>
                 <div className="space-y-4">
-                  {[
-                    { habit: '5-min morning meditation', benefit: 'Reduces anxiety by 40%', emoji: '🧘' },
-                    { habit: 'Gratitude journaling', benefit: 'Boosts happiness score', emoji: '📝' },
-                    { habit: 'Digital sunset at 9pm', benefit: 'Improves sleep quality', emoji: '🌙' },
-                  ].map(r => (
+                  {dynamicHabits.map(r => (
                     <div key={r.habit} className="flex items-center gap-4 p-4 rounded-xl bg-green-50 border border-green-100">
                       <span className="text-3xl">{r.emoji}</span>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-800">{r.habit}</p>
                         <p className="text-sm text-gray-500">{r.benefit}</p>
                       </div>
-                      <button className="text-xs font-bold text-sky-600 px-3 py-1.5 bg-sky-100 rounded-lg hover:bg-sky-200 transition-colors" onClick={() => showToast('Habit added to your tracker!', 'success')}>
+                      <button 
+                        className="text-xs font-bold text-sky-600 px-3 py-1.5 bg-sky-100 rounded-lg hover:bg-sky-200 transition-colors" 
+                        onClick={() => {
+                          const currentGoals = profile.goals || [];
+                          if (!currentGoals.includes(r.habit)) {
+                            onUpdateProfile?.({ goals: [...currentGoals, r.habit] });
+                          }
+                          showToast('Habit added to your tracker!', 'success');
+                        }}
+                      >
                         Add
                       </button>
                     </div>

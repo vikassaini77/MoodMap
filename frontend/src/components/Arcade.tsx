@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Zap, Trophy, ArrowLeft } from 'lucide-react';
 import type { UserProfile } from '../types';
 import { FloatingWorld } from './FloatingWorld';
+import { useToast } from './ToastContext';
+import { DEFAULT_MISSIONS } from '../App';
 
 interface ArcadeProps {
   profile: UserProfile;
@@ -270,6 +272,7 @@ const BreathRider: React.FC<{ onComplete: (score: number) => void }> = ({ onComp
 };
 
 const Arcade: React.FC<ArcadeProps> = ({ profile, onUpdateProfile }) => {
+  const { showToast } = useToast();
   const [activeGame, setActiveGame] = useState<GameId>(null);
   const [completed, setCompleted] = useState<GameId[]>([]);
   const [showGameModal, setShowGameModal] = useState(false);
@@ -278,9 +281,24 @@ const Arcade: React.FC<ArcadeProps> = ({ profile, onUpdateProfile }) => {
     if (!gameId || completed.includes(gameId)) { setActiveGame(null); setShowGameModal(false); return; }
     const game = GAMES.find(g => g.id === gameId)!;
     setCompleted(c => [...c, gameId]);
+    const currentMissions = profile.dailyMissions && profile.dailyMissions.length > 0 ? profile.dailyMissions : DEFAULT_MISSIONS;
+    const wasDone = currentMissions.find(m => m.id === 'm4')?.done;
+    const updatedMissions = currentMissions.map(m => 
+      m.id === 'm4' ? { ...m, done: true } : m
+    );
+
+    let xpGain = game.xp;
+    if (!wasDone) {
+      xpGain += 20; // XP for mission m4
+      showToast('Mission Completed: Play a mood game! +20 XP', 'success');
+    }
+    
+    showToast(`Game Completed! +${game.xp} XP, +${game.coins} Coins`, 'success');
+
     onUpdateProfile({
-      xp: profile.xp + game.xp,
+      xp: profile.xp + xpGain,
       moodCoins: profile.moodCoins + game.coins,
+      dailyMissions: updatedMissions,
     });
     setActiveGame(null);
     setShowGameModal(false);
@@ -289,7 +307,7 @@ const Arcade: React.FC<ArcadeProps> = ({ profile, onUpdateProfile }) => {
   if (activeGame && showGameModal) {
     const game = GAMES.find(g => g.id === activeGame)!;
     return (
-      <FloatingWorld mood={profile.currentMood}>
+      <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
         <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
           <div className="max-w-[800px] mx-auto px-4 sm:px-6 py-6">
             <button onClick={() => { setActiveGame(null); setShowGameModal(false); }}
@@ -320,7 +338,7 @@ const Arcade: React.FC<ArcadeProps> = ({ profile, onUpdateProfile }) => {
   }
 
   return (
-    <FloatingWorld mood={profile.currentMood}>
+    <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}

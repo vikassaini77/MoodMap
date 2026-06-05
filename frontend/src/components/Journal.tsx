@@ -4,9 +4,11 @@ import type { Mood, UserProfile, JournalEntry } from '../types';
 import { MOOD_CONFIG } from '../types';
 import { FloatingWorld } from './FloatingWorld';
 import { useToast } from './ToastContext';
+import { DEFAULT_MISSIONS } from '../App';
 
 interface JournalProps {
   profile: UserProfile;
+  onUpdateProfile: (updates: Partial<UserProfile>) => void;
   onNavigate: (page: any) => void;
 }
 
@@ -33,9 +35,9 @@ const SAMPLE_ENTRIES: JournalEntry[] = [
   },
 ];
 
-const Journal: React.FC<JournalProps> = ({ profile }) => {
+const Journal: React.FC<JournalProps> = ({ profile, onUpdateProfile, onNavigate }) => {
   const { showToast } = useToast();
-  const [entries, setEntries] = useState<JournalEntry[]>(SAMPLE_ENTRIES);
+  const [entries, setEntries] = useState<JournalEntry[]>(profile.journalEntries || SAMPLE_ENTRIES);
   const [showNew, setShowNew] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -68,13 +70,35 @@ const Journal: React.FC<JournalProps> = ({ profile }) => {
         title: newTitle,
         content: apiResponse.companionResponse ? `${newContent}\n\n🌟 Companion says: ${apiResponse.companionResponse}` : newContent,
         mood: newMood,
-        sentiment: Math.floor(50 + Math.random() * 45),
-        tags: [],
+        sentiment: 85,
+        tags: []
       };
-      setEntries([entry, ...entries]);
+      
+      const newEntries = [entry, ...entries];
+      setEntries(newEntries);
+      onUpdateProfile({ journalEntries: newEntries });
+      
       setNewTitle('');
       setNewContent('');
       setShowNew(false);
+      
+      // Update mission
+      const currentMissions = profile.dailyMissions && profile.dailyMissions.length > 0 ? profile.dailyMissions : DEFAULT_MISSIONS;
+      const updatedMissions = currentMissions.map(m => 
+        m.id === 'm2' ? { ...m, done: true } : m
+      );
+      
+      const wasDone = currentMissions.find(m => m.id === 'm2')?.done;
+      if (!wasDone) {
+        showToast('Mission Completed: Write a journal entry! +30 XP', 'success');
+        onUpdateProfile({ 
+          dailyMissions: updatedMissions,
+          xp: profile.xp + 30
+        });
+      } else {
+        onUpdateProfile({ dailyMissions: updatedMissions });
+      }
+
       showToast('Entry saved successfully!', 'success');
     } catch (e) {
       console.error('Failed to save entry', e);
@@ -86,7 +110,7 @@ const Journal: React.FC<JournalProps> = ({ profile }) => {
 
   if (selectedEntry) {
     return (
-      <FloatingWorld mood={selectedEntry.mood}>
+      <FloatingWorld mood={selectedEntry.mood} equippedBackground={profile.equippedBackground}>
         <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
           <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
             {/* Back button */}
@@ -157,7 +181,7 @@ const Journal: React.FC<JournalProps> = ({ profile }) => {
   }
 
   return (
-    <FloatingWorld mood={profile.currentMood}>
+    <FloatingWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}

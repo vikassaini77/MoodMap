@@ -68,7 +68,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
         </div>
         <div className="hidden md:flex items-center gap-8">
           {['Features', 'Companions', 'Stories', 'Science'].map(item => (
-            <a key={item} href="#" className="text-sm font-medium text-gray-600 hover:text-sky-600 transition-colors">
+            <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-medium text-gray-600 hover:text-sky-600 transition-colors">
               {item}
             </a>
           ))}
@@ -194,8 +194,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
         </div>
       </section>
 
-      {/* Mood Weather Preview */}
-      <section className="py-20 px-6 bg-gradient-to-r from-sky-50 to-teal-50">
+      {/* Mood Weather Preview (Science) */}
+      <section id="science" className="py-20 px-6 bg-gradient-to-r from-sky-50 to-teal-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
@@ -226,7 +226,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
       </section>
 
       {/* Features Section */}
-      <section className="py-20 px-6">
+      <section id="features" className="py-20 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
@@ -251,7 +251,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
       </section>
 
       {/* Companions Section */}
-      <section className="py-20 px-6 bg-gradient-to-b from-white to-sky-50">
+      <section id="companions" className="py-20 px-6 bg-gradient-to-b from-white to-sky-50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
@@ -281,7 +281,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onLogin }) => {
       </section>
 
       {/* Testimonials */}
-      <section className="py-20 px-6 bg-gradient-to-r from-teal-50 to-sky-50">
+      <section id="stories" className="py-20 px-6 bg-gradient-to-r from-teal-50 to-sky-50">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl font-bold text-gray-900 mb-12"
             style={{ fontFamily: 'Playfair Display, serif' }}>

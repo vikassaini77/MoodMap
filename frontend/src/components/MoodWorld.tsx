@@ -4,6 +4,7 @@ import { MOOD_THEMES } from '../moodTheme';
 
 interface MoodWorldProps {
   mood: Mood;
+  equippedBackground?: string;
   children: React.ReactNode;
 }
 
@@ -18,7 +19,7 @@ interface Particle {
   opacity: number;
 }
 
-export const MoodWorld: React.FC<MoodWorldProps> = ({ mood, children }) => {
+export const MoodWorld: React.FC<MoodWorldProps> = ({ mood, equippedBackground, children }) => {
   const theme = MOOD_THEMES[mood];
   const [particles, setParticles] = useState<Particle[]>([]);
   const [raindrops, setRaindrops] = useState<{ id: number; x: number; delay: number; duration: number }[]>([]);
@@ -135,6 +136,13 @@ export const MoodWorld: React.FC<MoodWorldProps> = ({ mood, children }) => {
     }
   }, [theme, raindrops]);
 
+  const isStarry = equippedBackground === 'starry-bg' || equippedBackground === 'starry-bundle';
+  const isSakura = equippedBackground === 'sakura-bg';
+  
+  let bgClasses = `bg-gradient-to-b ${theme.bgGradient}`;
+  if (isStarry) bgClasses = 'bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900';
+  if (isSakura) bgClasses = 'bg-gradient-to-b from-pink-100 via-rose-50 to-pink-50';
+
   return (
     <div
       className="min-h-screen relative transition-all duration-1000 overflow-x-hidden"
@@ -144,7 +152,7 @@ export const MoodWorld: React.FC<MoodWorldProps> = ({ mood, children }) => {
     >
       {/* Dynamic gradient background */}
       <div
-        className={`fixed inset-0 bg-gradient-to-b ${theme.bgGradient} transition-all duration-1000`}
+        className={`fixed inset-0 ${bgClasses} transition-all duration-1000`}
       />
 
       {/* Ambient glow */}
@@ -177,6 +185,33 @@ export const MoodWorld: React.FC<MoodWorldProps> = ({ mood, children }) => {
           </div>
         ))}
       </div>
+
+      {/* Starry Effect */}
+      {isStarry && (
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({ length: 50 }, (_, i) => (
+            <div
+              key={`star-${i}`}
+              className="absolute bg-white rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                width: `${1 + Math.random() * 2}px`,
+                height: `${1 + Math.random() * 2}px`,
+                opacity: 0.2 + Math.random() * 0.8,
+                animation: `twinkle ${2 + Math.random() * 3}s ease-in-out infinite alternate`,
+                animationDelay: `${Math.random() * 2}s`,
+              }}
+            />
+          ))}
+          <style>{`
+            @keyframes twinkle {
+              0% { opacity: 0.2; transform: scale(0.8); }
+              100% { opacity: 1; transform: scale(1.2); }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10">

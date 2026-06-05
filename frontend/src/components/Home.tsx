@@ -5,6 +5,8 @@ import { MOOD_CONFIG, COMPANIONS } from '../types';
 import { MOOD_THEMES, COMPANION_ENVIRONMENTS } from '../moodTheme';
 import AnimatedCompanion from './AnimatedCompanion';
 import { MoodWorld } from './MoodWorld';
+import { DEFAULT_MISSIONS } from '../App';
+import { useToast } from './ToastContext';
 
 interface HomeProps {
   profile: UserProfile;
@@ -12,24 +14,18 @@ interface HomeProps {
   onNavigate: (page: any) => void;
 }
 
-const DAILY_MISSIONS = [
-  { id: 'm1', title: 'Log your mood', xp: 20, done: true, emoji: '🎭' },
-  { id: 'm2', title: 'Write a journal entry', xp: 30, done: false, emoji: '✍️' },
-  { id: 'm3', title: 'Complete a breathing exercise', xp: 25, done: true, emoji: '💨' },
-  { id: 'm4', title: 'Play a mood game', xp: 20, done: false, emoji: '🎮' },
-];
-
 const MOOD_WEEK: Mood[] = ['happy', 'calm', 'neutral', 'anxious', 'happy', 'excited', 'calm'];
 const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const Home: React.FC<HomeProps> = ({ profile, onUpdateProfile, onNavigate }) => {
+  const { showToast } = useToast();
   const [showMoodPicker, setShowMoodPicker] = useState(false);
   const [greeting, setGreeting] = useState('');
-  const [missions] = useState(DAILY_MISSIONS);
   const [breathingActive, setBreathingActive] = useState(false);
   const [breathePhase, setBreathePhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [breatheTimer, setBreatheTimer] = useState(4);
 
+  const missions = profile.dailyMissions && profile.dailyMissions.length > 0 ? profile.dailyMissions : DEFAULT_MISSIONS;
   const companion = COMPANIONS[profile.companion];
   const moodConfig = MOOD_CONFIG[profile.currentMood];
   const moodTheme = MOOD_THEMES[profile.currentMood];
@@ -69,7 +65,22 @@ const Home: React.FC<HomeProps> = ({ profile, onUpdateProfile, onNavigate }) => 
   }, [breathingActive]);
 
   const selectMood = (mood: Mood) => {
-    onUpdateProfile({ currentMood: mood });
+    const wasDone = missions.find(m => m.id === 'm1')?.done;
+    const updatedMissions = missions.map(m => 
+      m.id === 'm1' ? { ...m, done: true } : m
+    );
+
+    let xpGain = 0;
+    if (!wasDone) {
+      xpGain = 20; // XP for m1
+      showToast('Mission Completed: Log your mood! +20 XP', 'success');
+    }
+
+    onUpdateProfile({ 
+      currentMood: mood,
+      dailyMissions: updatedMissions,
+      xp: profile.xp + xpGain
+    });
     setShowMoodPicker(false);
   };
 
@@ -91,7 +102,7 @@ const Home: React.FC<HomeProps> = ({ profile, onUpdateProfile, onNavigate }) => 
   }, [companionEnv]);
 
   return (
-    <MoodWorld mood={profile.currentMood}>
+    <MoodWorld mood={profile.currentMood} equippedBackground={profile.equippedBackground}>
       {/* Desktop Layout Wrapper */}
       <div className="lg:pl-56 xl:pl-64 min-h-screen pb-24 lg:pb-0">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 py-6">
@@ -498,7 +509,20 @@ const Home: React.FC<HomeProps> = ({ profile, onUpdateProfile, onNavigate }) => 
             <p className="text-sm font-medium mb-6" style={{ color: moodTheme.textSecondary }}>
               {breathePhase === 'inhale' ? '🌬️ Breathe in...' : breathePhase === 'hold' ? '⏸️ Hold...' : '💨 Breathe out...'}
             </p>
-            <button onClick={() => setBreathingActive(false)} className="text-sm" style={{ color: moodTheme.textSecondary }}>
+            <button onClick={() => {
+              setBreathingActive(false);
+              const wasDone = missions.find(m => m.id === 'm3')?.done;
+              if (!wasDone) {
+                const updatedMissions = missions.map(m => 
+                  m.id === 'm3' ? { ...m, done: true } : m
+                );
+                showToast('Mission Completed: Complete a breathing exercise! +25 XP', 'success');
+                onUpdateProfile({ 
+                  dailyMissions: updatedMissions,
+                  xp: profile.xp + 25
+                });
+              }
+            }} className="text-sm" style={{ color: moodTheme.textSecondary }}>
               Close
             </button>
           </div>

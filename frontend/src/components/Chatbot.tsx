@@ -75,7 +75,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
     subscription: 'free'
   };
 
-  const isDark = settings.theme === 'Dark' || (settings.theme === 'System' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const isDark = false; // Disabled dark mode to seamlessly blend with the app's bright MoodWorld aesthetic
   const themeAccent = settings.accentColor === 'Green' ? '#10b981' : settings.accentColor === 'Blue' ? '#3b82f6' : '#ec4899';
   
   const companion = COMPANIONS[profile.companion];
@@ -225,13 +225,18 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
       const historyToSend = messages.map(m => ({ role: m.role, text: m.text }));
       historyToSend.push({ role: 'user', text: userMessage.text });
       
+      const surveyContext = `User Background: Age ${profile.age || 'not specified'}, Occupation: ${profile.occupation || 'not specified'}, Country: ${profile.country || 'not specified'}. Goals: ${(profile.goals && profile.goals.length > 0) ? profile.goals.join(', ') : 'none specified'}. Please personalize your advice based on this background.`;
+      const fullInstructions = profile.customInstructions 
+        ? `${surveyContext}\n\nAdditional User Preferences: ${profile.customInstructions}`
+        : surveyContext;
+
       const response = await sendChatMessage(
         currentSessionId, 
         historyToSend, 
         profile.companion, 
         profile.currentMood, 
         userMessage.image_url,
-        profile.customInstructions
+        fullInstructions
       );
       
       const companionMessage: ChatMessage = {
@@ -276,7 +281,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
     <MoodWorld mood={profile.currentMood}>
       <div className="lg:pl-56 xl:pl-64 h-screen flex">
         {/* Sidebar for Chat History */}
-        <div className="w-64 border-r bg-white/40 backdrop-blur-md hidden md:flex flex-col h-full z-10 relative shadow-sm" style={{ borderColor: moodTheme.cardBorder }}>
+        <div className={`w-64 border-r hidden md:flex flex-col h-full z-10 relative shadow-sm backdrop-blur-md ${isDark ? 'bg-slate-900/60' : 'bg-white/40'}`} style={{ borderColor: moodTheme.cardBorder }}>
           <div className="p-4 border-b" style={{ borderColor: moodTheme.cardBorder }}>
             <button 
               onClick={handleNewChat}
@@ -291,7 +296,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
               <button
                 key={session.id}
                 onClick={() => loadSession(session.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${currentSessionId === session.id ? 'bg-white/80 shadow-sm scale-100 ring-1' : 'hover:bg-white/50'}`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${currentSessionId === session.id ? (isDark ? 'bg-slate-800 shadow-sm scale-100 ring-1' : 'bg-white/80 shadow-sm scale-100 ring-1') : (isDark ? 'hover:bg-slate-800/50' : 'hover:bg-white/50')}`}
                 style={{ ringColor: currentSessionId === session.id ? moodTheme.accent : 'transparent' }}
               >
                 <MessageSquare className={`w-4 h-4 ${currentSessionId === session.id ? 'opacity-100' : 'opacity-60'}`} style={{ color: moodTheme.accent }} />
@@ -329,7 +334,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
             
             <button 
               onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="w-full flex items-center gap-3 p-2 rounded-xl transition-all hover:bg-white/60"
+              className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all ${isDark ? 'hover:bg-slate-800/60' : 'hover:bg-white/60'}`}
             >
               <div className="w-8 h-8 rounded-full bg-sky-200 flex items-center justify-center text-sm font-bold shadow-sm" style={{ color: moodTheme.textPrimary }}>
                  {profile.avatarUrl ? <img src={profile.avatarUrl} alt="Avatar" className="w-full h-full rounded-full object-cover" /> : profile.name[0]?.toUpperCase()}
@@ -390,7 +395,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                     style={{ 
                       background: msg.role === 'user' 
                         ? `linear-gradient(135deg, ${moodTheme.accent}, ${moodTheme.accent}dd)` 
-                        : 'rgba(255, 255, 255, 0.7)',
+                        : (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.7)'),
                       color: msg.role === 'user' ? '#fff' : moodTheme.textPrimary,
                       border: msg.role === 'user' ? 'none' : `1px solid ${moodTheme.cardBorder}`
                     }}
@@ -410,7 +415,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                     <span className="text-lg">{companion.emoji}</span>
                   </div>
                   <div className="px-5 py-4 rounded-2xl rounded-tl-sm flex items-center gap-2"
-                       style={{ background: 'rgba(255, 255, 255, 0.7)', border: `1px solid ${moodTheme.cardBorder}` }}>
+                       style={{ background: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.7)', border: `1px solid ${moodTheme.cardBorder}` }}>
                     <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: moodTheme.accent }} />
                     <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: moodTheme.accent, animationDelay: '0.2s' }} />
                     <div className="w-2 h-2 rounded-full animate-bounce" style={{ background: moodTheme.accent, animationDelay: '0.4s' }} />
@@ -422,7 +427,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
             </div>
 
             {/* Input Area */}
-            <div className="p-3 md:p-4 border-t" style={{ borderColor: moodTheme.cardBorder, background: 'rgba(255,255,255,0.4)' }}>
+            <div className="p-3 md:p-4 border-t" style={{ borderColor: moodTheme.cardBorder, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.4)' }}>
               {imageBase64 && (
                 <div className="mb-2 relative inline-block">
                   <img src={imageBase64} alt="Preview" className="h-16 rounded-md shadow-sm border border-gray-200" />
@@ -431,7 +436,7 @@ const Chatbot: React.FC<ChatbotProps> = ({ profile, onUpdateProfile, onSignOut }
                   </button>
                 </div>
               )}
-              <div className="relative flex items-center gap-1 bg-white/90 rounded-2xl shadow-inner border p-1" style={{ borderColor: moodTheme.cardBorder }}>
+              <div className="relative flex items-center gap-1 rounded-2xl shadow-inner border p-1" style={{ borderColor: moodTheme.cardBorder, background: isDark ? 'rgba(30, 41, 59, 0.9)' : 'rgba(255, 255, 255, 0.9)' }}>
                 
                 <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
                 

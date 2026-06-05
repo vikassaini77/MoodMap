@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Camera, Award, Star, Flame, Edit2, ChevronRight, Trophy, Upload, Settings, LogOut } from 'lucide-react';
 import type { Mood, UserProfile } from '../types';
 import { MOOD_CONFIG, COMPANIONS } from '../types';
@@ -10,7 +10,7 @@ import { useToast } from './ToastContext';
 interface ProfileProps {
   profile: UserProfile;
   onUpdateProfile: (updates: Partial<UserProfile>) => void;
-  onNavigate?: (page: any) => void;
+  onNavigate: (page: any) => void;
   onSignOut?: () => void;
 }
 
@@ -50,6 +50,20 @@ const Profile: React.FC<ProfileProps> = ({ profile, onUpdateProfile, onNavigate,
   const levelProgress = ((profile.xp % 500) / 500) * 100;
   const moodTheme = MOOD_THEMES[profile.currentMood];
 
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        onUpdateProfile({ coverUrl: reader.result as string });
+        showToast('Cover photo updated!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const saveName = () => {
     onUpdateProfile({ name: nameInput });
     setEditingName(false);
@@ -85,9 +99,15 @@ const Profile: React.FC<ProfileProps> = ({ profile, onUpdateProfile, onNavigate,
             {/* Cover Image */}
             <div
               className="h-40 relative overflow-hidden cursor-pointer group"
-              style={{ background: `linear-gradient(135deg, ${moodTheme.accent}30, ${moodTheme.accent}15)` }}
+              style={{ 
+                background: profile.coverUrl 
+                  ? `url(${profile.coverUrl}) center/cover no-repeat` 
+                  : `linear-gradient(135deg, ${moodTheme.accent}30, ${moodTheme.accent}15)` 
+              }}
+              onClick={() => coverInputRef.current?.click()}
             >
-              {Array.from({ length: 10 }, (_, i) => (
+              <input type="file" accept="image/*" className="hidden" ref={coverInputRef} onChange={handleCoverUpload} />
+              {!profile.coverUrl && Array.from({ length: 10 }, (_, i) => (
                 <div
                   key={i}
                   className="absolute animate-float"
@@ -115,10 +135,13 @@ const Profile: React.FC<ProfileProps> = ({ profile, onUpdateProfile, onNavigate,
               {/* Avatar */}
               <div className="relative inline-block mb-4">
                 <div
-                  className="w-28 h-28 rounded-2xl border-4 flex items-center justify-center text-4xl shadow-xl cursor-pointer group"
+                  className="w-28 h-28 rounded-2xl border-4 flex items-center justify-center text-4xl shadow-xl cursor-pointer group overflow-hidden"
                   style={{ borderColor: moodTheme.cardBg, background: `linear-gradient(135deg, ${moodTheme.accent}20, ${moodTheme.accent}10)` }}
+                  onClick={() => onNavigate?.('settings')}
                 >
-                  {profile.name ? profile.name[0].toUpperCase() : '😊'}
+                  {profile.avatarUrl ? (
+                    <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : profile.name ? profile.name[0].toUpperCase() : '😊'}
                   <div className="absolute inset-0 rounded-2xl bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Camera className="w-6 h-6 text-white" />
                   </div>

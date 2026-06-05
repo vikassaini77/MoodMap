@@ -3,6 +3,7 @@ import type { Page, UserProfile } from './types';
 import LandingPage from './components/LandingPage';
 import Onboarding from './components/Onboarding';
 import Login from './components/Login';
+import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Sidebar, BottomNav } from './components/Navigation';
@@ -19,7 +20,14 @@ import Settings from './components/Settings';
 import Chatbot from './components/Chatbot';
 import Council from './components/Council';
 
-type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'reset-password' | 'app';
+type AppState = 'splash' | 'landing' | 'onboarding' | 'login' | 'forgot-password' | 'reset-password' | 'app';
+
+export const DEFAULT_MISSIONS = [
+  { id: 'm1', title: 'Log your mood', xp: 20, done: false, emoji: '🎭' },
+  { id: 'm2', title: 'Write a journal entry', xp: 30, done: false, emoji: '✍️' },
+  { id: 'm3', title: 'Complete a breathing exercise', xp: 25, done: false, emoji: '💨' },
+  { id: 'm4', title: 'Play a mood game', xp: 20, done: false, emoji: '🎮' },
+];
 
 const DEFAULT_PROFILE: UserProfile = {
   id: '',
@@ -47,7 +55,8 @@ const DEFAULT_PROFILE: UserProfile = {
     spokenLanguage: 'English',
     mfaEnabled: false,
     subscription: 'free'
-  }
+  },
+  dailyMissions: DEFAULT_MISSIONS
 };
 
 function App() {
@@ -101,6 +110,14 @@ function App() {
     setAppState('landing');
   }, []);
 
+  React.useEffect(() => {
+    if (profile.settings?.theme === 'Dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [profile.settings?.theme]);
+
   // Forgot password is now handled inside Login component
 
   const navigateTo = useCallback((page: Page) => {
@@ -127,8 +144,13 @@ function App() {
         onLogin={handleLogin}
         onCreateAccount={() => setAppState('onboarding')}
         onBack={() => setAppState('landing')}
+        onForgotPassword={() => setAppState('forgot-password')}
       />
     );
+  }
+
+  if (appState === 'forgot-password') {
+    return <ForgotPassword onBack={() => setAppState('login')} />;
   }
 
   if (appState === 'onboarding') {
@@ -159,23 +181,23 @@ function App() {
       case 'home':
         return <Home key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onNavigate={navigateTo} />;
       case 'journal':
-        return <Journal key={transitionKey} profile={profile} onNavigate={navigateTo} />;
+        return <Journal key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onNavigate={navigateTo} />;
       case 'sanctuary':
-        return <Sanctuary key={transitionKey} profile={profile} />;
+        return <Sanctuary key={transitionKey} profile={profile} onNavigate={navigateTo} />;
       case 'insights':
-        return <Insights key={transitionKey} profile={profile} />;
+        return <Insights key={transitionKey} profile={profile} onUpdateProfile={updateProfile} />;
       case 'arcade':
         return <Arcade key={transitionKey} profile={profile} onUpdateProfile={updateProfile} />;
       case 'shop':
         return <Shop key={transitionKey} profile={profile} onUpdateProfile={updateProfile} />;
       case 'profile':
-        return <Profile key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onSignOut={handleSignOut} />;
+        return <Profile key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onSignOut={handleSignOut} onNavigate={navigateTo} />;
       case 'chat':
         return <Chatbot key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onSignOut={handleSignOut} />;
       case 'council':
         return <Council key={transitionKey} profile={profile} />;
       case 'sos':
-        return <SOS key={transitionKey} profile={profile} />;
+        return <SOS key={transitionKey} profile={profile} onNavigate={navigateTo} />;
       case 'settings':
         return <Settings key={transitionKey} profile={profile} onUpdateProfile={updateProfile} onNavigate={navigateTo} />;
       default:
