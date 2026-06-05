@@ -310,7 +310,7 @@ cd backend_ml && pytest tests/
 ## 18. Screenshots Section
 
 <div align="center">
-  <img src="assets/dashboard_mockup.png" alt="Dashboard Preview" width="800" />
+  <img src="assets/dashboard_real.png" alt="Dashboard Preview" width="800" />
   <br/>
   <em>Fig 1. The living UI reacting to a user's emotional state.</em>
 </div>
@@ -318,9 +318,9 @@ cd backend_ml && pytest tests/
 <br/>
 
 <div align="center">
-  <img src="assets/chat_mockup.png" alt="AI Companion Chat Preview" width="800" />
+  <img src="assets/landing_real.png" alt="Landing Page Preview" width="800" />
   <br/>
-  <em>Fig 2. Empathetic conversations with your personalized AI companion.</em>
+  <em>Fig 2. The stunning landing page introducing the AI companions.</em>
 </div>
 
 ---
